@@ -33,7 +33,7 @@ class Button {
     }
     
     
-    void Click(){
+    void click(){
         // todo
     }
 }

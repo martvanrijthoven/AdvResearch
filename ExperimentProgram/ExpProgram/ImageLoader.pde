@@ -1,9 +1,16 @@
 class ImageLoader {
-    int x, y;
-    PImage img;
-    
+    int x = 40 ;
+    int y = 80;
+    PImage [] imgs;
+    int index;
     ImageLoader(){
-        // get all images from directory 
+        File theDir = new File(dataPath("")+"/images/");
+        String[] theList = theDir.list();
+        imgs =  new PImage[theList.length];
+        for (int i =0; i<theList.length; i++){
+            imgs[i] = loadImage(dataPath("")+"/images/"+theList[i]);
+        }
+        index = 0;
     }
     
     
@@ -12,8 +19,17 @@ class ImageLoader {
     
     }
     
-    void display(){
-        image(img, this.x, this.y); // Displays the image from point (0,0) 
-        img.loadPixels();
+    
+    void incIndex(){
+        if(this.index < this.imgs.length-1){
+            this.index++;
+        }
+            
     }
+    
+    void display(){
+       image(imgs[index], this.x, this.y); // Displays the image from point (0,0) 
+       imgs[index].loadPixels();
+    }
+
 }
