@@ -1,19 +1,25 @@
 class Button {
-    int x, y;      // Position button
-    int size = 90; 
+    int x, y,w,h;      // Position button 
     color rectColor;
     color rectHighlight;
-    boolean rectOver = false;
+    String text;
     
-    Button (int x, int y){
-        this.x = x;
-        this.y = y;
-        this.rectColor = color(0);
-        this.rectHighlight = color(51);
+    
+    Button (int x, int y, int w, int h, String text){
+
+        this.w = w;
+        this.h = h;
+        this.x = x-this.w/2;
+        this.y = y-this.h/2;
+        this.text = text;
+        this.rectColor = color(80);
+        this.rectHighlight = color(0);
     }
     
     
     void update(){
+        
+        
         if (rectOver()) {
             fill(rectHighlight);
         } 
@@ -21,19 +27,22 @@ class Button {
             fill(rectColor);
         }
         stroke(255);
-        rect(this.x, this.y, this.size, this.size);
+
+        rect(this.x, this.y, this.w, this.h);
+        textSize(22);
+        fill(0);
+        text(this.text,this.x+this.w/2,this.y+this.h/2);
+        
     }
+    
     boolean rectOver()  {
-      if (mouseX >= this.x && mouseX <= this.x+this.size && 
-          mouseY >= this.y && mouseY <= this.y+size) {
+      if (mouseX >= this.x && mouseX <= this.x+this.w && 
+          mouseY >= this.y && mouseY <= this.y+this.h) {
         return true;
       } else {
         return false;
       }
     }
-    
-    
-    void click(){
-        // todo
-    }
 }
+    
+   
