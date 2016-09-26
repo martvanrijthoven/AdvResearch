@@ -13,23 +13,14 @@ class ImageLoader {
         index = 0;
     }
     
-    
-    void next(){
-        // img = loadImage("moon.jpg"); // Load the original image
-    
-    }
-    
-    
     void incIndex(){
         if(this.index < this.imgs.length-1){
             this.index++;
         }
-            
     }
     
     void display(){
        image(imgs[index], this.x, this.y); // Displays the image from point (0,0) 
        imgs[index].loadPixels();
     }
-
 }

@@ -6,7 +6,6 @@ class Button {
     
     
     Button (int x, int y, int w, int h, String text){
-
         this.w = w;
         this.h = h;
         this.x = x-this.w/2;
@@ -18,8 +17,6 @@ class Button {
     
     
     void update(){
-        
-        
         if (rectOver()) {
             fill(rectHighlight);
         } 
@@ -30,7 +27,7 @@ class Button {
 
         rect(this.x, this.y, this.w, this.h);
         textSize(22);
-        fill(0);
+        fill(255);
         text(this.text,this.x+this.w/2,this.y+this.h/2);
         
     }
