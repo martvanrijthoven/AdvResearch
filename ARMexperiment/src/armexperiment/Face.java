@@ -30,6 +30,20 @@ public class Face {
         this.neutralURL = neutralURL;
         happyEmotionSelected = false;
     }
+    
+    public Face(String faceID, boolean male, String emotionURL, boolean happy, String neutralURL) {
+        this.faceID = faceID;
+        this.male = male;
+        if(happy){
+            happyURL = emotionURL;
+            sadURL = null;
+        }else{
+            happyURL = null;
+            sadURL = emotionURL;
+        }
+        this.neutralURL = neutralURL;
+        happyEmotionSelected = false;
+    }
 
     public String getFaceID() {
         return faceID;
@@ -49,6 +63,12 @@ public class Face {
 
     public String getNeutralURL() {
         return neutralURL;
+    }
+    
+    public String getEmotionURL(){
+        if(happyURL == null || happyURL.equals(""))
+            return sadURL;
+        return happyURL;
     }
 
     public void setHappyEmotionSelected(boolean happyEmotionSelected) {
@@ -71,7 +91,5 @@ public class Face {
     public String toString() {
         return (male?"Male":"Female")+", emotion:"+ (happyEmotionSelected?"happy":"sad")+", trial:"+presentationOrder;
     }
-    
-    
     
 }

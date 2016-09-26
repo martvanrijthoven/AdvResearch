@@ -24,6 +24,10 @@ public class ARMexperiment {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        // PARAMETERS // // //
+        final int COOLDOWN = 3000;
+        final int TOTAL_FACES = 32; // must be a multiple of 4
+
         // args -> which type of music?
         int audio = 1; // 0=silence, 1=white noise, 2=neutral
         String musicType = null;
@@ -39,7 +43,7 @@ public class ARMexperiment {
                 break;
         }
 
-        int numTrials = 4; // =28
+        int numTrials = 4; // =16
 
         // determine the subject number
         String path = "..\\data\\";
@@ -62,71 +66,153 @@ public class ARMexperiment {
         pw.write("subject,musicType,comparisonOrder,presentationOrder,presentedFaceID,comparisonFaceID,emotion,gender,response\n");
         pw.flush();
 
-        // load all sad and happy images
-        ArrayList<Face> allFaces = loadAllImages();
+        // Face-Button ???
+        ArrayList<Face> men_sad = new ArrayList<>();
+        ArrayList<Face> men_happy = new ArrayList<>();
+        ArrayList<Face> women_sad = new ArrayList<>();
+        ArrayList<Face> women_happy = new ArrayList<>();
 
-        // randomly select 28 images (14 female & 14 sad)
-        ArrayList<Face> presentationFaces = selectPresentationFaces(allFaces, numTrials);
+        ArrayList<Face> presentation_faces = new ArrayList<>();
 
-        // remove the used faces from the list
-        for (Face f : presentationFaces)
-            allFaces.remove(f);
+        // import the faces
+        // shuffle arrays
+        long seed = System.nanoTime();
+        Collections.shuffle(men_sad, new Random(seed));
+        seed = System.nanoTime();
+        Collections.shuffle(men_happy, new Random(seed));
+        seed = System.nanoTime();
+        Collections.shuffle(women_sad, new Random(seed));
+        seed = System.nanoTime();
+        Collections.shuffle(women_happy, new Random(seed));
 
-        // select 28 more different images (for the final comparison)
-        ArrayList<Face> comparisonFaces = selectComparisonFaces(allFaces, presentationFaces, numTrials);
+        // SELECT PRESENTATION FACES // // //
+        // define how many faces of each condition will be selected
+        final int total_sad = TOTAL_FACES / 2;
+        final int total_happy = TOTAL_FACES / 2;
+        final int total_women = TOTAL_FACES / 2;
+        final int total_men = TOTAL_FACES / 2;
+        final int num_sad_men = men_sad.size(); // we have a limited number
+        final int num_sad_wom = total_sad - num_sad_men;
+        final int num_hap_men = num_sad_wom;
+        final int num_hap_wom = num_sad_men;
 
+        // select men
+        presentation_faces.addAll(men_sad);
+        for (int i = 0; i < num_hap_men; i++) {
+            presentation_faces.add(men_happy.get(i));
+        }
+
+        // select women
+        for (int i = 0; i < num_sad_wom; i++) {
+            presentation_faces.add(women_sad.get(i));
+        }
+        for (int i = 0; i < num_hap_wom; i++) {
+            presentation_faces.add(women_happy.get(i));
+        }
+
+        // SELECT COMPARISON FACES // // //
+        // remove selected faces (we cannot use the same face on both phases)
+        women_happy.removeAll(presentation_faces);
+        women_sad.removeAll(presentation_faces);
+        men_happy.removeAll(presentation_faces);
+        men_sad.removeAll(presentation_faces);
+
+        // create an array containing all the avalable men
+        ArrayList<Face> allMen = new ArrayList<>();
+        allMen.addAll(men_happy);
+        allMen.addAll(men_sad);
+
+        // create an array containing all the avalable women
+        ArrayList<Face> allWomen = new ArrayList<>();
+        allWomen.addAll(women_happy);
+        allWomen.addAll(women_sad);
+
+        // create face pairs
+        ArrayList<FacePair> fps = new ArrayList<>();
+
+        for (int i = 0; i < total_women; i++)
+            fps.add(new FacePair(presentation_faces.get(i), allWomen.get(i)));
+
+        for (int i = 0; i < total_men; i++)
+            fps.add(new FacePair(presentation_faces.get(total_women + i), allMen.get(i)));
+
+        // shuffle pairs to randomise emotion and gender order
+        seed = System.nanoTime();
+        Collections.shuffle(fps, new Random(seed));
+
+        // save presentation order (for statistical analysis)
+        for (int i = 0; i < fps.size(); i++) {
+            fps.get(i).getPresFace().setPresentationOrder(i);
+        }
+
+        // load demo/assessment too
+        // if the code didn't crash then we are ready to start the experiment!
         System.out.println("All data loaded. Ready to run the experiment.");
 
+        // present the demo/assessment
+        boolean completed = false;
+        do {
+
+            System.out.println("Is everything clear?");
+            // experiment leader gives an answer YES or NO
+            if (true) { //TODO: if the experimenter answered "YES"
+                completed = true;
+            }
+        } while (!completed);
+
+        // PRESENTATION PHASE // // //
         // play music -> preferably different thread for music
         // present the images
-        for (Face f : presentationFaces) {
-            if (f.isHappyEmotionSelected()) {
-                // present the happy emotion image
-                System.out.println(f.getHappyURL());
-            } else {
-                // present the sad emotion image
-                System.out.println(f.getSadURL());
-            }
+        for (FacePair fp : fps) {
+            System.out.println(fp.getPresFace().getEmotionURL());
 
             // wait 3s between image presentations
             try {
-                Thread.sleep(3000);
+                Thread.sleep(COOLDOWN);
             } catch (InterruptedException ex) {
                 Logger.getLogger(ARMexperiment.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        // end of phase 1
-        //
-        // phase 2: present pairs of images and let the user choose
-        System.out.println("Please select the image you saw");
+
+        // COMPARISON PHASE // // //
+        // shuffle the faces so that they are not shown in the same order
+        seed = System.nanoTime();
+        Collections.shuffle(fps, new Random(seed));
+
+        System.out.println("Please select the face you saw");
         String first, second, answer;
         boolean correct;
-        for (int i = 0; i < presentationFaces.size(); i++) {
+
+        // show all face pairs
+        FacePair fp;
+        for (int i = 0; i < fps.size(); i++) {
+            fp = fps.get(i);
             // show pairs of images
             if ((int) (Math.random() * (2)) == 0) {
-                first = presentationFaces.get(i).getNeutralURL();
-                second = comparisonFaces.get(i).getNeutralURL();
+                first = fp.getCompFace().getNeutralURL();
+                second = fp.getPresFace().getNeutralURL();
             } else {
-                first = comparisonFaces.get(i).getNeutralURL();
-                second = presentationFaces.get(i).getNeutralURL();
+                first = fp.getPresFace().getNeutralURL();
+                second = fp.getCompFace().getNeutralURL();
             }
             System.out.println(first + " OR " + second + "?");
 
             // record user's answer
-            answer = presentationFaces.get(i).getFaceID();
+            answer = fp.getPresFace().getFaceID();
 
-            if (answer.equals(presentationFaces.get(i).getFaceID()))
+            if (answer.equals(fp.getPresFace().getFaceID()))
                 correct = true;
             else correct = false;
 
             // write a csv line
-            pw.write(n + "," + musicType + "," + i + "," + presentationFaces.get(i).getPresentationOrder() + ","
-                    + presentationFaces.get(i).getFaceID() + "," + comparisonFaces.get(i).getFaceID() + ","
-                    + (presentationFaces.get(i).isHappyEmotionSelected() ? "happy" : "sad") + "," + 
-                    (presentationFaces.get(i).isMale() ? "male" : "female") + "," + (correct ? "correct" : "wrong")+"\n");
+            // subject,musicType,presentationOrder,comparisonOrder,presentedFaceID,comparisonFaceID,emotion,gender,response\n
+            pw.write(n + "," + musicType + "," + "," + fp.getPresFace().getPresentationOrder() + "," + i
+                    + fp.getPresFace().getFaceID() + "," + fp.getCompFace().getFaceID() + ","
+                    + (fp.isPresHappy() ? "happy" : "sad") + ","
+                    + (fp.getPresFace().isMale() ? "male" : "female") + "," + (correct ? "correct" : "wrong") + "\n");
             pw.flush();
         }
-        
+
         pw.close();
     }
 
